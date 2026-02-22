@@ -4,153 +4,100 @@
 ║        Fitur Lengkap Tsunami Edition        ║
 ╚══════════════════════════════════════════╝
 ]]
+local ts = game:GetService("TweenService")
+local plr = game.Players.LocalPlayer
+local hrp = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
 
--- Configuration
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/swiftshix2/ETFB/refs/heads/main/lua"))() or loadstring(game:HttpGet("https://pastebin.com/raw/XYZ12345"))()
+local flyHeight = 230
+local targetPos = Vector3.new(63, flyHeight, 20)
 
--- Variables
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local userInputService = game:GetService("UserInputService")
-local runService = game:GetService("RunService")
-local virtualUser = game:GetService("VirtualUser")
 
--- Main GUI
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local TabHolder = Instance.new("Frame")
-local ScrollingFrame = Instance.new("ScrollingFrame")
-local UIListLayout = Instance.new("UIListLayout")
-
--- GUI Setup
-ScreenGui.Name = "TsunamiCheat"
-ScreenGui.Parent = game.CoreGui
-ScreenGui.ResetOnSpawn = false
-
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
-MainFrame.Size = UDim2.new(0, 400, 0, 500)
-MainFrame.Active = true
-MainFrame.Draggable = true
-
--- Rounded corners
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = MainFrame
-
--- Title
-Title.Name = "Title"
-Title.Parent = MainFrame
-Title.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "🌊 TSUNAMI BRAINROT HUB 🌊"
-Title.TextColor3 = Color3.fromRGB(0, 255, 255)
-Title.TextSize = 20
-Title.BorderSizePixel = 0
-
--- Title corners
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 8)
-TitleCorner.Parent = Title
-
--- Tab Holder
-TabHolder.Name = "TabHolder"
-TabHolder.Parent = MainFrame
-TabHolder.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-TabHolder.BorderSizePixel = 0
-TabHolder.Position = UDim2.new(0, 0, 0.08, 0)
-TabHolder.Size = UDim2.new(1, 0, 0, 35)
-
--- Scrolling Frame for buttons
-ScrollingFrame.Parent = MainFrame
-ScrollingFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-ScrollingFrame.BorderSizePixel = 0
-ScrollingFrame.Position = UDim2.new(0, 0, 0.15, 0)
-ScrollingFrame.Size = UDim2.new(1, 0, 0.85, 0)
-ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-ScrollingFrame.ScrollBarThickness = 8
-
-UIListLayout.Parent = ScrollingFrame
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 8)
-
--- Function to create buttons
-local function createButton(name, callback, color)
-    local Button = Instance.new("TextButton")
-    Button.Name = name
-    Button.Parent = ScrollingFrame
-    Button.BackgroundColor3 = color or Color3.fromRGB(45, 45, 55)
-    Button.Size = UDim2.new(0.95, 0, 0, 40)
-    Button.Font = Enum.Font.Gotham
-    Button.Text = name
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.TextSize = 16
-    Button.AutoButtonColor = false
-    Button.BorderSizePixel = 0
-    
-    local ButtonCorner = Instance.new("UICorner")
-    ButtonCorner.CornerRadius = UDim.new(0, 6)
-    ButtonCorner.Parent = Button
-    
-    Button.MouseButton1Click:Connect(callback)
-    
-    return Button
+function TeleportPlatform(boolth)
+    if boolth == true then
+        local upCF = CFrame.new(hrp.Position.X, flyHeight, hrp.Position.Z)
+        ts:Create(hrp, TweenInfo.new(2), {CFrame = upCF}):Play()
+        task.wait(2.1) -- Small buffer for physics sync 
+    else
+        local landCF = CFrame.new(hrp.Position.X, 3, hrp.Position.Z)
+        ts:Create(hrp, TweenInfo.new(2), {CFrame = landCF}):Play()
+        task.wait(2)
+    end
 end
 
--- Function to create toggle
-local function createToggle(name, callback, default)
-    local ToggleFrame = Instance.new("Frame")
-    ToggleFrame.Parent = ScrollingFrame
-    ToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-    ToggleFrame.Size = UDim2.new(0.95, 0, 0, 40)
-    
-    local ToggleCorner = Instance.new("UICorner")
-    ToggleCorner.CornerRadius = UDim.new(0, 6)
-    ToggleCorner.Parent = ToggleFrame
-    
-    local Label = Instance.new("TextLabel")
-    Label.Parent = ToggleFrame
-    Label.BackgroundTransparency = 1
-    Label.Size = UDim2.new(0.7, 0, 1, 0)
-    Label.Font = Enum.Font.Gotham
-    Label.Text = name
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.TextSize = 16
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Position = UDim2.new(0.02, 0, 0, 0)
-    
-    local Toggle = Instance.new("TextButton")
-    Toggle.Parent = ToggleFrame
-    Toggle.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
-    Toggle.Size = UDim2.new(0.25, 0, 0.7, 0)
-    Toggle.Position = UDim2.new(0.73, 0, 0.15, 0)
-    Toggle.Font = Enum.Font.Gotham
-    Toggle.Text = "OFF"
-    Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Toggle.TextSize = 14
-    Toggle.BorderSizePixel = 0
-    
-    local ToggleCorner2 = Instance.new("UICorner")
-    ToggleCorner2.CornerRadius = UDim.new(0, 4)
-    ToggleCorner2.Parent = Toggle
-    
-    local enabled = default or false
-    
-    Toggle.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        Toggle.BackgroundColor3 = enabled and Color3.fromRGB(70, 255, 70) or Color3.fromRGB(255, 70, 70)
-        Toggle.Text = enabled and "ON" or "OFF"
-        callback(enabled)
-    end)
-    
-    return ToggleFrame
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Window = WindUI:CreateWindow({
+    Title = "FeluxHub",
+    Icon = "shield", -- lucide icon. optional
+})
+
+function Notify(content)
+    WindUI:Notify({
+        Title = "FeluxHub",
+        Content = content,
+        Duration = 3, -- 3 seconds
+        Icon = "package-open",
+    })
 end
+
+Window:Tag({
+    Title = AZG_SCRIPTVERSION or "DEV",
+    Icon = "rocket",
+    Color = Color3.fromHex("#FFFF00"),
+    Radius = 13, -- from 0 to 13
+})
+
+
+local StatsTab = Window:Tab({
+    Title = "Statistics",
+    Icon = "chart-no-axes-combined", -- optional
+    Locked = false,
+})
+
+local DescThingyStats = StatsTab:Paragraph({
+    Title = "Welcome to FeluxHub",
+    Desc = "For more info & other scripts, join our Discord!",
+    Locked = false,
+})
+
+
+local CopyDiscord = StatsTab:Button({
+    Title = "Discord Link",
+    Locked = false,
+    Callback = function()
+        setclipboard("https://discord.gg/5TwrQDcWax")
+        Notify("Discord Link Copied!")
+    end
+})
+
+StatsTab:Divider()
+
+local CurrentMoney = StatsTab:Paragraph({
+    Title = "Current Money",
+    Desc = "Loading...",
+    Locked = false,
+})
+
+local RebirthStats = StatsTab:Paragraph({
+    Title = "Total Rebirth(s)",
+    Desc = "Loading...",
+    Locked = false,
+})
+
+
+local SpeedJump = StatsTab:Paragraph({
+    Title = "Speed/Jump Level",
+    Desc = "Loading...",
+    Locked = false,
+})
+
+StatsTab:Select()
+
+local MainTab = Window:Tab({
+    Title = "Main",
+    Icon = "house", -- optional
+    Locked = false,
+})
 
 -- ============================================
 -- 🌪️ FITUR TSUNAMI UTAMA
