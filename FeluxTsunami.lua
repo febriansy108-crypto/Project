@@ -458,13 +458,83 @@ createButton("🔍 INFINITE ZOOM", function()
 end)
 
 -- VIP Unlock
-createButton("💎 UNLOCK VIP", function()
-    local args = {
-        [1] = "VIP"
-    }
-    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("PurchaseGamepass"):InvokeServer(unpack(args))
-    createButton("✓ VIP UNLOCKED!", nil, Color3.fromRGB(255, 215, 0))
-end)
+local RunService = game:GetService("RunService")
+
+local Enabled = false
+local Backup = {}
+local Connection
+
+local function getVIP()
+    local map = workspace:FindFirstChild("DefaultMap_SharedInstances", true)
+    if not map then return end
+    return map:FindFirstChild("VIPWalls")
+end
+
+local function backupVIP(vip)
+    Backup = {}
+    for _, v in ipairs(vip:GetChildren()) do
+        table.insert(Backup, v:Clone())
+    end
+end
+
+local function restoreVIP(vip)
+    vip:ClearAllChildren()
+    for _, v in ipairs(Backup) do
+        v:Clone().Parent = vip
+    end
+end
+
+local function enableVIP()
+    local vip = getVIP()
+    if not vip then return end
+
+    if #Backup == 0 then
+        backupVIP(vip)
+    end
+
+    Connection = RunService.Heartbeat:Connect(function()
+        for _, v in ipairs(vip:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+            if v:IsA("GuiObject")
+            or v:IsA("Decal")
+            or v:IsA("Texture")
+            or v.Name:lower():match("vip") then
+                pcall(function()
+                    v:Destroy()
+                end)
+            end
+        end
+    end)
+end
+
+local function disableVIP()
+    if Connection then
+        Connection:Disconnect()
+        Connection = nil
+    end
+
+    local vip = getVIP()
+    if vip and #Backup > 0 then
+        restoreVIP(vip)
+    end
+end
+
+x2:AddButton({
+    Title = "Unlock Vip And Vip+",
+    Callback = function()
+        Enabled = not Enabled
+
+        if Enabled then
+            Lexs("VIP Walls Disabled")
+            enableVIP()
+        else
+            Lexs("VIP Walls Restored")
+            disableVIP()
+        end
+    end
+})
 
 -- ============================================
 -- 🎯 FITUR TELEPORT
