@@ -1,0 +1,372 @@
+local ts = game:GetService("TweenService")
+local plr = game.Players.LocalPlayer
+local hrp = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+
+local flyHeight = 230
+local targetPos = Vector3.new(63, flyHeight, 20)
+
+
+function TeleportPlatform(boolth)
+    if boolth == true then
+        local upCF = CFrame.new(hrp.Position.X, flyHeight, hrp.Position.Z)
+        ts:Create(hrp, TweenInfo.new(2), {CFrame = upCF}):Play()
+        task.wait(2.1) -- Small buffer for physics sync 
+    else
+        local landCF = CFrame.new(hrp.Position.X, 3, hrp.Position.Z)
+        ts:Create(hrp, TweenInfo.new(2), {CFrame = landCF}):Play()
+        task.wait(2)
+    end
+end
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Window = WindUI:CreateWindow({
+    Title = "FeluxHub",
+    Icon = "shield", -- lucide icon. optional
+})
+
+function Notify(content)
+    WindUI:Notify({
+        Title = "FeluxHub",
+        Content = content,
+        Duration = 3, -- 3 seconds
+        Icon = "package-open",
+    })
+end
+
+Window:Tag({
+    Title = AZG_SCRIPTVERSION or "DEV",
+    Icon = "rocket",
+    Color = Color3.fromHex("#FFFF00"),
+    Radius = 13, -- from 0 to 13
+})
+
+
+local StatsTab = Window:Tab({
+    Title = "Statistics",
+    Icon = "chart-no-axes-combined", -- optional
+    Locked = false,
+})
+
+local DescThingyStats = StatsTab:Paragraph({
+    Title = "Welcome to FeluxHub",
+    Desc = "For more info & other scripts, join our Discord!",
+    Locked = false,
+})
+
+
+local CopyDiscord = StatsTab:Button({
+    Title = "Discord Link",
+    Locked = false,
+    Callback = function()
+        setclipboard("https://discord.gg/5TwrQDcWax")
+        Notify("Discord Link Copied!")
+    end
+})
+
+StatsTab:Divider()
+
+local CurrentMoney = StatsTab:Paragraph({
+    Title = "Current Money",
+    Desc = "Loading...",
+    Locked = false,
+})
+
+local RebirthStats = StatsTab:Paragraph({
+    Title = "Total Rebirth(s)",
+    Desc = "Loading...",
+    Locked = false,
+})
+
+
+local SpeedJump = StatsTab:Paragraph({
+    Title = "Speed/Jump Level",
+    Desc = "Loading...",
+    Locked = false,
+})
+
+StatsTab:Select()
+
+local MainTab = Window:Tab({
+    Title = "Main",
+    Icon = "house", -- optional
+    Locked = false,
+})
+
+local MainParagraph = MainTab:Paragraph({
+    Title = "FeluxHub | Mini Tutorial",
+    Desc = "1. Run & get your brainrot\n2.Teleport UP\n3. Run to Base\n4.Teleport Down",
+    Locked = false,
+})
+
+local TeleportUP = MainTab:Button({
+    Title = "Teleport Up",
+    Locked = false,
+    Callback = function()
+        TeleportPlatform(true)
+    end
+})
+
+local TeleportDown = MainTab:Button({
+    Title = "Teleport Down",
+    Locked = false,
+    Callback = function()
+        TeleportPlatform(false)
+    end
+})
+
+
+local DeleteVIP = MainTab:Button({
+    Title = "Delete VIP Walls",
+    Locked = false,
+    Callback = function()
+        workspace.DefaultMap_SharedInstances.VIPWalls:Destroy()
+    end
+})
+
+
+
+
+
+MainTab:Divider()
+
+local UserInputService = game:GetService("UserInputService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local plr = game:GetService("Players").LocalPlayer
+
+-- Infinite Jump Variables
+local infJumpConnection
+local infJumpDebounce = false
+
+local ToggleInfJump = MainTab:Toggle({
+    Title = "Infinite Jump",
+    Default = false, -- Changed 'Value' to 'Default' depending on your UI lib (usually it's Default)
+    Callback = function(state) 
+        if state then
+            if infJumpConnection then infJumpConnection:Disconnect() end
+            Notify("Infinite Jump Activated!")
+            infJumpConnection = UserInputService.JumpRequest:Connect(function()
+                if not infJumpDebounce then
+                    infJumpDebounce = true
+                    local char = plr.Character
+                    local hum = char and char:FindFirstChildWhichIsA("Humanoid")
+                    if hum then
+                        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+                    task.wait() -- Use task.wait() for better performance
+                    infJumpDebounce = false
+                end
+            end)
+        else
+            if infJumpConnection then infJumpConnection:Disconnect() end
+            infJumpConnection = nil
+            Notify("Infinite Jump Deactivated!")
+        end
+    end
+})
+
+-- Instant Grab Variables
+local promptConnection
+
+local ToggleInst = MainTab:Toggle({
+    Title = "Instant Grab",
+    Default = false,
+    Callback = function(state) 
+        -- Check for common executor functions
+        if not fireproximityprompt then 
+            Notify("Executor doesn't support fireproximityprompt!") 
+            return 
+        end
+
+        if state then
+            Notify("Instant Grab Activated!")
+            -- Clean up old connection if it exists
+            if promptConnection then promptConnection:Disconnect() end
+            
+            promptConnection = ProximityPromptService.PromptButtonHoldBegan:Connect(function(prompt)
+                fireproximityprompt(prompt)
+            end)
+        else
+            if promptConnection then promptConnection:Disconnect() end
+            promptConnection = nil
+            Notify("Instant Grab Deactivated!")
+        end
+    end
+})
+
+
+--// Misc
+
+local MiscTab = Window:Tab({
+    Title = "Misc",
+    Icon = "settings",
+    Locked = false,
+})
+
+local MiscDesc = MiscTab:Paragraph({
+    Title = "Misc Panel",
+    Desc = "See some other features here!",
+    Locked = false,
+})
+
+local JobIDVar
+
+
+local JobIDInput = MiscTab:Input({
+    Title = "Job ID",
+    Value = "",
+    Type = "Input",
+    Placeholder = "Enter your server Job ID here!",
+    Callback = function(input) 
+        JobIDVar = tonumber(input)
+    end
+})
+
+local JoinBtn = MiscTab:Button({
+    Title = "Join Server",
+    Locked = false,
+    Callback = function()
+		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, JobIdVar, game.Players.LocalPlayer)
+	end
+})
+
+
+local RejoinBtn = MiscTab:Button({
+    Title = "Rejoin Server",
+    Locked = false,
+    Callback = function()
+		game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+	end
+})
+
+local KeybindSet = MiscTab:Keybind({
+    Title = "Keybind",
+    Desc = "Keybind to toggle UI",
+    Value = "H",
+    Callback = function(v)
+        Window:SetToggleKey(Enum.KeyCode[v])
+    end
+})
+
+local OthersSection = MiscTab:Section({ 
+    Title = "Other Settings",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local AFKToggle = MiscTab:Toggle({
+    Title = "Toggle AntiAFK",
+    Type = "Toggle",
+    Default = true,
+    Callback = function(state) 
+        ToggleAFKVar = state
+    end
+})
+
+local function LowGraphic()
+	local Terrain = workspace:FindFirstChildOfClass('Terrain')
+	Terrain.WaterWaveSize = 0
+	Terrain.WaterWaveSpeed = 0
+	Terrain.WaterReflectance = 0
+	Terrain.WaterTransparency = 1
+	settings().Rendering.QualityLevel = 1
+	for i,v in pairs(game:GetDescendants()) do
+		if v:IsA("BasePart") then
+			v.Material = "Plastic"
+			v.Reflectance = 0
+			v.BackSurface = "SmoothNoOutlines"
+			v.BottomSurface = "SmoothNoOutlines"
+			v.FrontSurface = "SmoothNoOutlines"
+			v.LeftSurface = "SmoothNoOutlines"
+			v.RightSurface = "SmoothNoOutlines"
+			v.TopSurface = "SmoothNoOutlines"
+		elseif v:IsA("Decal") then
+			v.Transparency = 1
+		elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+			v.Lifetime = NumberRange.new(0)
+		end
+	end
+	for i,v in pairs(Lighting:GetDescendants()) do
+		if v:IsA("PostEffect") then
+			v.Enabled = false
+		end
+	end
+	workspace.DescendantAdded:Connect(function(child)
+		task.spawn(function()
+			if child:IsA('ForceField') or child:IsA('Sparkles') or child:IsA('Smoke') or child:IsA('Fire') or child:IsA('Beam') then
+				RunService.Heartbeat:Wait()
+				child:Destroy()
+			end
+		end)
+	end)
+end
+
+local GraphicToggle = MiscTab:Toggle({
+    Title = "Toggle LowGraphics",
+    Type = "Toggle",
+    Default = false,
+    Callback = function(state) 
+        if state == true then
+			LowGraphic()
+		end
+    end
+})
+
+local IFBtn = MiscTab:Button({
+    Title = "Launch Infinite Yield",
+    Locked = false,
+    Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+	end
+})
+
+--// AFK Function
+
+local vu = game:GetService("VirtualUser")
+game:GetService("Players").LocalPlayer.Idled:connect(function() 
+	if ToggleAFKVar == true then
+		vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame) 
+		wait(1)
+		vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+	end
+end)
+
+-- Current Money Set Text
+
+CurrentMoney:SetDesc(plr.PlayerGui.HUD.BottomLeft.Money.Text)
+plr.PlayerGui.HUD.BottomLeft.Money:GetPropertyChangedSignal("Text"):Connect(function()
+	CurrentMoney:SetDesc(plr.PlayerGui.HUD.BottomLeft.Money.Text)
+end)
+
+CurrentMoney:SetDesc(plr.PlayerGui.HUD.BottomLeft.Money.Text)
+plr.PlayerGui.HUD.BottomLeft.Money:GetPropertyChangedSignal("Text"):Connect(function()
+	CurrentMoney:SetDesc(plr.PlayerGui.HUD.BottomLeft.Money.Text)
+end)
+
+
+
+t = plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.EventCurrency.Value.Text .. " Speed / " .. plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.TraitCurrency.Value.Text .. " Jump"
+SpeedJump:SetDesc(t)
+plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.TraitCurrency.Value:GetPropertyChangedSignal("Text"):Connect(function()
+	t = plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.EventCurrency.Value.Text .. " Speed / " .. plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.TraitCurrency.Value.Text .. " Jump"
+    SpeedJump:SetDesc(t)
+end)
+
+tc = plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.EventCurrency.Value.Text .. " Speed / " .. plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.TraitCurrency.Value.Text .. " Jump"
+SpeedJump:SetDesc(tc)
+plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.EventCurrency.Value:GetPropertyChangedSignal("Text"):Connect(function()
+	tc = plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.EventCurrency.Value.Text .. " Speed / " .. plr.PlayerGui.HUD.BottomLeft.JumpAndSpeed.Container.TraitCurrency.Value.Text .. " Jump"
+    SpeedJump:SetDesc(tc)
+end)
+
+-- Rebirths Set Text
+
+RebirthStats:SetDesc(string.match(tostring(plr.PlayerGui.Menus.Toggles.Rebirth.ImageButton.TextLabel.Text), "%d+").."x Rebirths")
+plr.PlayerGui.Menus.Toggles.Rebirth.ImageButton.TextLabel:GetPropertyChangedSignal("Text"):Connect(function()
+	RebirthStats:SetDesc(string.match(tostring(plr.PlayerGui.Menus.Toggles.Rebirth.ImageButton.TextLabel.Text), "%d+").."x Rebirths")
+end)
+
+
+
+
+
